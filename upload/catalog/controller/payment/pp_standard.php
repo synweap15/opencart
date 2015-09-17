@@ -105,6 +105,21 @@ class ControllerPaymentPPStandard extends Controller {
 	}
 
 	public function callback() {
+
+		$raw_input = file_get_contents("php://input");
+		$raw_array = explode("&", $raw_input);
+		$new_post = array();
+
+		foreach($raw_array as $value) {
+			$split_value = explode("=", $value);
+			if(count($split_value) == 2) {
+				$new_value[$split_value[0]] = urldecode($split_value[1]);
+			}
+		}
+
+		$this->request->post = $new_post;
+
+
 		if (isset($this->request->post['custom'])) {
 			$order_id = $this->request->post['custom'];
 		} else {
@@ -119,7 +134,11 @@ class ControllerPaymentPPStandard extends Controller {
 			$request = 'cmd=_notify-validate';
 
 			foreach ($this->request->post as $key => $value) {
-				$request .= '&' . $key . '=' . urlencode(html_entity_decode($value, ENT_QUOTES, 'UTF-8'));
+				if($key == "cmd") {
+					continue;
+				}
+
+				$request .= '&' . $key . '=' . urlencode($value);
 			}
 
 			if (!$this->config->get('pp_standard_test')) {
